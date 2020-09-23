@@ -26,3 +26,14 @@ class AppGalSelectedAssetState extends AppGalleryState {
   @override
   List<Object> get props => [id];
 }
+
+class AppGalShowSnackbarState extends AppGalleryState {
+  final String message;
+
+  AppGalShowSnackbarState(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AppGalCloseSnackbarState extends AppGalleryState {}

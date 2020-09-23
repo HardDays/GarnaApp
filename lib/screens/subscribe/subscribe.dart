@@ -69,6 +69,7 @@ class SubscribeScreen extends StatelessWidget {
                 ),
                 CustomMaterialButton(
                   infiniteWidth: true,
+                  margin: const EdgeInsets.symmetric(horizontal: 52),
                   child: Text(
                     isAvailableTrial ? 'Пробная версия' : 'Оформить подписку',
                     style: TextStyle(
@@ -87,7 +88,7 @@ class SubscribeScreen extends StatelessWidget {
                         : 'Стоимость подписки 199 ₽ / месяц',
                     style: const TextStyle(
                       fontFamily: 'Roboto',
-                      color: Constants.colorGrey,
+                      color: Constants.colorLightGrey,
                       fontSize: 12,
                     ),
                   ),
@@ -100,7 +101,7 @@ class SubscribeScreen extends StatelessWidget {
                     child: const Text(
                       'Восстановить покупку',
                       style: TextStyle(
-                        color: Constants.colorGrey,
+                        color: Constants.colorLightGrey,
                         fontSize: 16,
                       ),
                     ),

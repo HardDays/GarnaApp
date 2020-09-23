@@ -19,3 +19,14 @@ class AppGalSelectAssetEvent extends AppGalleryEvent {
   @override
   List<Object> get props => [identifier];
 }
+
+class AppGalShowSnackbarEvent extends AppGalleryEvent {
+  final String message;
+
+  AppGalShowSnackbarEvent(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AppGalCloseSnackbarEvent extends AppGalleryEvent {}

@@ -43,6 +43,7 @@ class GarnaAppIcons {
       IconData(0xe80e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData shadows =
       IconData(0xe80f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  // TODO: заменить эту иконку. https://trello.com/c/YUQju5A4/22-верстка-редактор-насыщенность
   static const IconData satturation =
       IconData(0xe810, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

@@ -8,17 +8,22 @@ class EmptyGalleryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      childAspectRatio: Constants.gridViewChildAspectRatio,
-      // padding: EdgeInsets.all(4.0),
-      children: List.generate(
-        9,
-        (index) => Container(
-          margin: Constants.gridViewElementMargin,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).accentColor,
+    return Padding(
+      // padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: Constants.standardPaddingDouble),
+      child: GridView.count(
+        // shrinkWrap: true,
+        crossAxisCount: 3,
+        childAspectRatio: Constants.gridViewChildAspectRatio,
+        // padding: EdgeInsets.all(4.0),
+        children: List.generate(
+          9,
+          (index) => Container(
+            margin: Constants.gridViewElementMargin,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).accentColor,
+              ),
             ),
           ),
         ),
