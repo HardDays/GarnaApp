@@ -42,13 +42,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   pedantic: ^1.9.0
-  flutter_native_splash: ^0.1.9
 
 
-flutter_native_splash:
-  # image: assets/images/background/test.png
-  color: "000000"
-  # fill: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -78,9 +73,9 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: GarnaApp
+    - family: GarnaAppIcons
       fonts:
-        - asset: assets/fonts/GarnaApp.ttf
+        - asset: assets/fonts/GarnaAppIcons.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
     - family: NeueHelvetica

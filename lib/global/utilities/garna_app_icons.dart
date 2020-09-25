@@ -18,7 +18,7 @@ import 'package:flutter/widgets.dart';
 class GarnaAppIcons {
   GarnaAppIcons._();
 
-  static const _kFontFam = 'GarnaApp';
+  static const _kFontFam = 'GarnaAppIcons';
   static const _kFontPkg = null;
 
   static const IconData cancel =
@@ -37,13 +37,47 @@ class GarnaAppIcons {
       IconData(0xe80a, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData woodgraining =
       IconData(0xe80b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData frame =
+      IconData(0xe80c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData plus =
       IconData(0xe80d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData lightAreas =
       IconData(0xe80e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData shadows =
       IconData(0xe80f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  // TODO: заменить эту иконку. https://trello.com/c/YUQju5A4/22-верстка-редактор-насыщенность
   static const IconData satturation =
       IconData(0xe810, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }
+
+// class GarnaAppIcons {
+//   GarnaAppIcons._();
+
+//   static const _kFontFam = 'GarnaApp';
+//   static const _kFontPkg = null;
+
+//   static const IconData cancel =
+//       IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData contrast =
+//       IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData cut =
+//       IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData exposition =
+//       IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData icedit =
+//       IconData(0xe804, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData icmore =
+//       IconData(0xe805, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData whitebalance =
+//       IconData(0xe80a, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData woodgraining =
+//       IconData(0xe80b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData plus =
+//       IconData(0xe80d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData lightAreas =
+//       IconData(0xe80e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   static const IconData shadows =
+//       IconData(0xe80f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+//   // TODO: заменить эту иконку. https://trello.com/c/YUQju5A4/22-верстка-редактор-насыщенность
+//   static const IconData satturation =
+//       IconData(0xe810, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+// }

@@ -8,12 +8,15 @@ class EditButtonWidget extends StatelessWidget {
   final IconData icon;
   final String title;
   final Function onPressed;
+  final bool isSatturationIcon;
   const EditButtonWidget({
     Key key,
     this.icon,
     this.title,
     this.onPressed,
-  }) : super(key: key);
+    this.isSatturationIcon = false,
+  })  : assert(!isSatturationIcon || icon == null),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,38 +35,87 @@ class EditButtonWidget extends StatelessWidget {
               onPressed();
             }
           },
-          child: SizedBox(
-            width: 80,
-            height: 80,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 38,
-                  color: title ==
-                          BlocProvider.of<EditorBloc>(context).selectedEditItem
-                      ? Theme.of(context).accentColor
-                      : Theme.of(context).primaryColorLight,
-                ),
-                const SizedBox(
-                  height: Constants.standardPaddingDouble,
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: title ==
-                              BlocProvider.of<EditorBloc>(context)
-                                  .selectedEditItem
-                          ? Theme.of(context).accentColor
-                          : Theme.of(context).primaryColorLight),
-                ),
-              ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+                minHeight: 1, maxHeight: 80, minWidth: 80, maxWidth: 80),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  !isSatturationIcon
+                      ? Icon(
+                          icon,
+                          size: 38,
+                          color: title ==
+                                  BlocProvider.of<EditorBloc>(context)
+                                      .selectedEditItem
+                              ? Theme.of(context).accentColor
+                              : Theme.of(context).primaryColorLight,
+                        )
+                      : CustomSatturationWidgetIcon(title: title),
+                  const SizedBox(
+                    height: Constants.standardPaddingDouble,
+                  ),
+                  Text(
+                    title,
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: title ==
+                                BlocProvider.of<EditorBloc>(context)
+                                    .selectedEditItem
+                            ? Theme.of(context).accentColor
+                            : Theme.of(context).primaryColorLight),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class CustomSatturationWidgetIcon extends StatelessWidget {
+  const CustomSatturationWidgetIcon({
+    Key key,
+    @required this.title,
+  }) : super(key: key);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      height: 38,
+      width: 38,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          width: 2,
+          color: title == BlocProvider.of<EditorBloc>(context).selectedEditItem
+              ? Theme.of(context).accentColor
+              : Theme.of(context).primaryColorLight,
+        ),
+      ),
+      child: Container(
+        width: 29,
+        height: 29,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Theme.of(context).primaryColorLight,
+              title == BlocProvider.of<EditorBloc>(context).selectedEditItem
+                  ? Theme.of(context).accentColor
+                  : Theme.of(context).primaryColorLight.withOpacity(0.05),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

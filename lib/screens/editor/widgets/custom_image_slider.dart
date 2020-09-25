@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
 class CustomImageSliderWidget extends StatefulWidget {
-  const CustomImageSliderWidget({Key key}) : super(key: key);
+  final double trackHeight;
+  final double horizontalPadding;
+  const CustomImageSliderWidget({
+    Key key,
+    this.trackHeight = 25.0,
+    this.horizontalPadding = 58.0,
+  }) : super(key: key);
 
   @override
   _CustomImageSliderWidgetState createState() =>
@@ -14,16 +20,22 @@ class _CustomImageSliderWidgetState extends State<CustomImageSliderWidget> {
   Widget build(BuildContext context) {
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
-        trackShape: ImageSliderTrackShape(),
+        trackShape: ImageSliderTrackShape(
+          horizontalPadding: widget.horizontalPadding,
+        ),
         thumbShape: ImageSliderThumbShape(),
         overlayColor: Colors.transparent,
+        // trackHeight: 5,
       ),
-      child: Slider(
-        value: val,
-        onChanged: (value) {
-          val = value;
-          setState(() {});
-        },
+      child: LimitedBox(
+        maxHeight: widget.trackHeight,
+        child: Slider(
+          value: val,
+          onChanged: (value) {
+            val = value;
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -68,14 +80,14 @@ class ImageSliderThumbShape extends SliderComponentShape {
 }
 
 class ImageSliderTrackShape extends SliderTrackShape {
-  final double trackHeight;
+  final double trackThikness;
   final double horizontalPadding;
   final double tickMarksWidth;
   final double tickMarksHeight;
   final int divisions;
 
   ImageSliderTrackShape({
-    this.trackHeight = 2.0,
+    this.trackThikness = 2.0,
     this.horizontalPadding = 58.0,
     this.tickMarksWidth = 2.0,
     this.tickMarksHeight = 16.0,
@@ -95,7 +107,7 @@ class ImageSliderTrackShape extends SliderTrackShape {
     assert(thumbWidth >= 0);
     assert(trackHeight >= 0);
     assert(parentBox.size.width >= thumbWidth);
-    assert(parentBox.size.height >= trackHeight);
+    // assert(parentBox.size.height >= trackHeight);
 
     final double trackLeft = offset.dx + horizontalPadding;
     final double trackTop =
@@ -124,13 +136,13 @@ class ImageSliderTrackShape extends SliderTrackShape {
 
     final Paint trackPaint = Paint()
       ..color = sliderTheme.inactiveTrackColor
-      ..strokeWidth = trackHeight;
+      ..strokeWidth = trackThikness;
     final Paint tickPaint = Paint()
       ..color = sliderTheme.inactiveTrackColor
       ..strokeWidth = tickMarksWidth;
     context.canvas.drawLine(
-        Offset(horizontalPadding, trackCenterDy - trackHeight / 2),
-        Offset(trackEndDx, trackCenterDy + trackHeight / 2),
+        Offset(horizontalPadding, trackCenterDy - trackThikness / 2),
+        Offset(trackEndDx, trackCenterDy + trackThikness / 2),
         trackPaint);
     for (int i = 0; i < divisions + 1; i++) {
       context.canvas.drawLine(

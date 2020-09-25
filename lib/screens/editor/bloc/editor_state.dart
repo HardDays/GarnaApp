@@ -17,3 +17,25 @@ class EdChangeActiveFilterState extends EditorState {
   @override
   List<Object> get props => [id];
 }
+
+class EdChangeBottomPanelHeightState extends EditorState {
+  final double height;
+
+  EdChangeBottomPanelHeightState(this.height);
+
+  @override
+  List<Object> get props => [height];
+}
+
+class EdShowOrHideFrameButtonState extends EditorState {
+  final bool show;
+
+  EdShowOrHideFrameButtonState(this.show);
+
+  @override
+  List<Object> get props => [show];
+}
+
+class EdEndEditingState extends EditorState {}
+
+class EdResumeEditingSate extends EditorState {}

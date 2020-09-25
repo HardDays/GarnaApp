@@ -6,11 +6,17 @@ class CustomTextButton extends StatelessWidget {
   final String title;
   final Function onPressed;
   final bool isActive;
+  final double fontSize;
+  final EdgeInsets margin;
+  final Color color;
   const CustomTextButton({
     Key key,
     @required this.title,
     @required this.onPressed,
     @required this.isActive,
+    this.fontSize = 10,
+    this.margin,
+    this.color,
   }) : super(key: key);
 
   @override
@@ -18,15 +24,16 @@ class CustomTextButton extends StatelessWidget {
     return CustomMaterialButton(
       onPressed: onPressed,
       color: Colors.transparent,
-      margin: EdgeInsets.zero,
-      padding: Constants.standardPaddingDouble / 2,
+      margin: margin ?? EdgeInsets.zero,
+      padding: Constants.standardPaddingDouble / 3,
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 10,
-          color: isActive
-              ? Theme.of(context).accentColor
-              : Theme.of(context).primaryColorLight,
+          fontSize: fontSize,
+          color: color ??
+              (isActive
+                  ? Theme.of(context).accentColor
+                  : Theme.of(context).primaryColorLight),
         ),
       ),
     );

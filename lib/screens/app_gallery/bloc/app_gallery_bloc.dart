@@ -53,6 +53,7 @@ class AppGalleryBloc extends Bloc<AppGalleryEvent, AppGalleryState> {
           // cupertinoOptions: CupertinoOptions(
 
           // ),
+          selectedAssets: _assets,
           materialOptions: const MaterialOptions(
             actionBarColor: '#000000',
             statusBarColor: '#000000',

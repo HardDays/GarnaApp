@@ -13,7 +13,7 @@ class Constants {
   static BorderRadius standardBorderRadius =
       BorderRadius.circular(standardBorderRadiusDouble);
 
-  static const Duration standardAnimationDuration = Duration(milliseconds: 300);
+  static const Duration standardAnimationDuration = Duration(milliseconds: 200);
   static const Duration customSnackbarDuration = Duration(seconds: 3);
 
   // Colors
