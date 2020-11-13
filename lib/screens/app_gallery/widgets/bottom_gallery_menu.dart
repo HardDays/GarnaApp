@@ -1,10 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:garna/global/constants.dart';
 import 'package:garna/global/utilities/garna_app_icons.dart';
 import 'package:garna/screens/app_gallery/bloc/app_gallery_bloc.dart';
 import 'package:garna/screens/editor/editor.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as imageLib;
+import 'package:path/path.dart';
 
 class BottomGalleryMenuWidget extends StatelessWidget {
   const BottomGalleryMenuWidget({
@@ -26,17 +32,24 @@ class BottomGalleryMenuWidget extends StatelessWidget {
           title: 'Отмена',
         ),
         BottomGalleryMenuItemWidget(
-          onPressed: () =>
-              // BlocProvider.of<AppGalleryBloc>(context)
-              //     .add(AppGalShowSnackbarEvent('message')),
-              Navigator.of(context).pushNamed(
-            EditorScreen.id,
-            arguments: BlocProvider.of<AppGalleryBloc>(context)
-                .assets
-                .firstWhere((element) =>
-                    element.identifier ==
-                    BlocProvider.of<AppGalleryBloc>(context).selectedAsset),
-          ),
+          onPressed: () async {
+            final asset = BlocProvider.of<AppGalleryBloc>(context).assets.firstWhere(
+              (element) => element.identifier == BlocProvider.of<AppGalleryBloc>(context).selectedAsset
+            );
+
+            // showDialog(
+            //   context: context, 
+            //   child: Center(
+            //     child: CircularProgressIndicator(strokeWidth: 1)
+            //   )
+            // );
+            
+            // final data = await asset.getByteData(quality: 80);
+            // final bytes = data.buffer.asUint8List();
+
+            // Navigator.pop(context);
+            Navigator.of(context).pushNamed(EditorScreen.id, arguments: asset);
+          },
           icon: GarnaAppIcons.icedit,
           title: 'Редактировать',
         ),
@@ -48,7 +61,6 @@ class BottomGalleryMenuWidget extends StatelessWidget {
               message: const Text('Действия'),
               cancelButton: CupertinoActionSheetAction(
                   // isDestructiveAction: true,
-
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Отмена')),
               actions: [

@@ -29,11 +29,15 @@ class SubscribeScreen extends StatelessWidget {
             ),
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  Colors.black.withOpacity(0.001),
-                  // Colors.black.withOpacity(0.38),
-                  Colors.black.withOpacity(0.79),
-                ], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.001),
+                    // Colors.black.withOpacity(0.38),
+                    Colors.black.withOpacity(0.79),
+                  ], 
+                  begin: Alignment.topCenter, 
+                  end: Alignment.bottomCenter
+                ),
               ),
             ),
             Column(
