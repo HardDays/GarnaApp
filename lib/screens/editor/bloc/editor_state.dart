@@ -15,14 +15,27 @@ class EdImageState extends EditorState {
   List<Object> get props => [Random().nextInt(10000)];
 }
 
-class EdBufferImageState extends EditorState {
-  final Uint8List image;
+class EdImageTransformState extends EditorState {
+  final double skewX;
+  final double skewY;
+  final double angle;
 
-  EdBufferImageState(this.image);
+  EdImageTransformState(this.angle, this.skewX, this.skewY);
 
   @override
-  List<Object> get props => [Random().nextInt(10000)];
+  List<Object> get props => [angle, skewX, skewY];
 }
+
+
+
+// class EdBufferImageState extends EditorState {
+//   final Uint8List image;
+
+//   EdBufferImageState(this.image);
+
+//   @override
+//   List<Object> get props => [Random().nextInt(10000)];
+// }
 
 class EdChangeActiveFilterState extends EditorState {
   final int index;
@@ -38,5 +51,33 @@ class EdChangeSlideFilterState extends EditorState {
   EdChangeSlideFilterState(this.value);
 
   @override
+  List<Object> get props => [value, min, max];
+}
+
+class EdAlignModeState extends EditorState {
+  final bool value;
+
+  EdAlignModeState(this.value);
+
+  @override
   List<Object> get props => [value];
+}
+
+class EdAlignVerticalState extends EditorState {
+  final bool value;
+
+  EdAlignVerticalState(this.value);
+
+  @override
+  List<Object> get props => [value];
+}
+
+class EdAspectState extends EditorState {
+  final int from;
+  final int to;
+
+  EdAspectState(this.from, this.to);
+
+  @override
+  List<Object> get props => [from, to];
 }

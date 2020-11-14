@@ -44,6 +44,60 @@ class EdEndSlideFilterEvent extends EditorEvent {
   List<Object> get props => [value];
 }
 
+class EdChangeAngleEvent extends EditorEvent {
+  final double angle;
+
+  EdChangeAngleEvent(this.angle);
+
+  @override
+  List<Object> get props => [angle];
+}
+
+class EdChangeAlignModeEvent extends EditorEvent {
+  final bool value;
+
+  EdChangeAlignModeEvent(this.value);
+
+  @override
+  List<Object> get props => [value];
+}
+
+class EdChangeAlignVerticalEvent extends EditorEvent {
+  final bool value;
+
+  EdChangeAlignVerticalEvent(this.value);
+
+  @override
+  List<Object> get props => [value];
+}
+
+class EdChangeSkewXEvent extends EditorEvent {
+  final double value;
+
+  EdChangeSkewXEvent(this.value);
+
+  @override
+  List<Object> get props => [value];
+}
+
+class EdChangeSkewYEvent extends EditorEvent {
+  final double value;
+
+  EdChangeSkewYEvent(this.value);
+
+  @override
+  List<Object> get props => [value];
+}
+
+class EdChangeAspectEvent extends EditorEvent {
+  final int index;
+
+  EdChangeAspectEvent(this.index);
+
+  @override
+  List<Object> get props => [index];
+}
+
 class EdInitEvent extends EditorEvent {
   final Asset image;
 

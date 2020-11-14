@@ -58,9 +58,9 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   //Uint8List _originalImage;
   // Uint8List _compressedImage;
   // Uint8List _imageBytes;
-  bool _computing = false;
-
-  CancelableOperation _compute;
+  // bool _computing = false;
+  // CancelableOperation _compute;
+  //imageLib.Image _image;
 
   Bitmap _originalMediumBitmap;
   Bitmap _originalSmallBitmap;
@@ -68,48 +68,54 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   Bitmap _mediumBitmap;
   Bitmap _smallBitmap;
 
-  imageLib.Image _image;
+  bool _alignMode = true;
 
-  int index = 0;
+  double _angle = 0;
+  bool _verticalAlign = true;
+  int _aspectIndex = 0;
+  final aspectValues = [
+    [1, 1],
+    [2, 3],
+    [3, 4],
+    [4, 5],
+    [9, 16]
+  ];
 
+  double _skewX = 0;
+  double _skewY = 0;
 
+  int _filterIndex = 0;
   final _filterValues = [
-    //100.0,
     1.0,
     0.0,
     1.0,
     0.0
   ];
-
-  final filterLimits = [
+  final _filterLimits = [
     [0.75, 1.25],
-    //[0.0, 200.0],
     [-0.5, 0.5],
     [0.25, 1.75],
     [0.0, 100.0]
   ];
 
+  List<double> get limits => _filterLimits[_filterIndex - 1];
+
   PageController get pageController => _pageController;
 
-  Stream<EdChangeSlideFilterState> _setSlideValues(double value) async *{
-    _filterValues[index - 1] = value;
-    yield EdChangeSlideFilterState(value);
-  }
-
-  void _saveFilters(Bitmap bitmap) {
-    if (index - 1 != 0) {
+  void _saveFilters(Bitmap bitmap) {      
+    if (_filterIndex - 1 != 0) {
       bmp.contrastCore(bitmap.content, _filterValues[0]);
     }
     double exposure;
-    if (index - 1 != 1) {
+    if (_filterIndex - 1 != 1) {
       exposure = _filterValues[1];
     }
     double saturation;
-    if (index - 1 != 2) {
+    if (_filterIndex - 1 != 2) {
       saturation = _filterValues[2];
     }
     int blacks;
-    if (index - 1 != 3) {
+    if (_filterIndex - 1 != 3) {
       final value = _filterValues[3].toInt();
       blacks = (value << 16) + (value << 8) + (value);
     }
@@ -117,11 +123,15 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     bmp.adjustColorCore(bitmap.content, exposure: exposure, saturation: saturation, blacks: blacks);
   }
 
+  void _saveTransformations() {
+
+  }
+
   Stream<EditorState> _applyFilter(Bitmap bitmap) async *{
-    final value = _filterValues[index - 1];
+    final value = _filterValues[_filterIndex - 1];
     
     Uint8List bytes;
-    if (index == 1) {
+    if (_filterIndex == 1) {
       // final clone = _image.clone();
       // imageLib.contrast(clone, value);
       // bytes = imageLib.encodePng(clone);
@@ -146,11 +156,11 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       // }).then(
       //   (res)=> add(EdReturnImageEvent(res))
       // );
-    } else if (index == 2) {
+    } else if (_filterIndex == 2) {
       bytes = bmp.adjustColor(bitmap, exposure: value).buildHeaded();
-    } else if (index == 3) {
+    } else if (_filterIndex == 3) {
       bytes = bmp.adjustColor(bitmap, saturation: value).buildHeaded();
-    } else if (index == 4) {
+    } else if (_filterIndex == 4) {
       final blacks = (value.toInt() << 16) + (value.toInt() << 8) + (value.toInt());
       bytes = bmp.adjustColor(bitmap, blacks: blacks).buildHeaded();
     }
@@ -214,38 +224,64 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       _smallBitmap = await Bitmap.fromProvider(FileImage(smallFile));
       _originalMediumBitmap = _mediumBitmap.cloneHeadless();
       _originalSmallBitmap = _smallBitmap.cloneHeadless();
-
-      _image = imageLib.decodeImage(await smallFile.readAsBytes());
+            //_image = imageLib.decodeImage(await smallFile.readAsBytes());
     } else if (event is EdChangeActiveFilterEvent) {
-      index = event.index;
+      _filterIndex = event.index;
       if (event.index > 0) {
+        yield EdChangeActiveFilterState(event.index);
         _mediumBitmap = _originalMediumBitmap.cloneHeadless();
         _smallBitmap = _originalSmallBitmap.cloneHeadless();
         _saveFilters(_smallBitmap);
         _saveFilters(_mediumBitmap);
-        _applyFilter(_mediumBitmap);
-        yield EdChangeActiveFilterState(event.index);
-        yield EdChangeSlideFilterState(_filterValues[event.index - 1]);
+        yield* _applyFilter(_mediumBitmap);
+        yield EdChangeSlideFilterState(_filterValues[_filterIndex - 1]);
       } else {
         yield EdChangeActiveFilterState(event.index);
+        yield EdAlignModeState(_alignMode);
+        await Future.delayed(Duration(milliseconds: 10));
+        yield EdAlignVerticalState(_verticalAlign);
+        await Future.delayed(Duration(milliseconds: 10));
+        yield EdImageTransformState(_angle, _skewX, _skewY);
       }
     } else if (event is EdChangeSlideFilterEvent) {
-      final dv = (filterLimits[index - 1][1] - filterLimits[index - 1][0]) / 30;
-      final diff = (event.value- _filterValues[index - 1]).abs();
+      final min = limits[0];
+      final max = limits[1];
+      final dv = (max - min) / 30;
+      final diff = (event.value - _filterValues[_filterIndex - 1]).abs();
        if (diff > dv) {
         // if (_compute != null ) {
         //   await _compute.cancel();
         // }
-        _filterValues[index - 1] = event.value;
+        _filterValues[_filterIndex - 1] = event.value;
         yield EdChangeSlideFilterState(event.value);
         yield* _applyFilter(_smallBitmap);
        } else {
-         yield EdChangeSlideFilterState(event.value);
-       }
+        yield EdChangeSlideFilterState(event.value);
+      }
     } else if (event is EdEndSlideFilterEvent) {
-      _filterValues[index - 1] = event.value;
-      yield EdChangeSlideFilterState(event.value);
+      _filterValues[_filterIndex - 1] = event.value;
+       yield EdChangeSlideFilterState(_filterValues[_filterIndex - 1]);
       yield* _applyFilter(_mediumBitmap);
+    } else if (event is EdChangeAngleEvent) {
+      _angle = event.angle;
+      yield EdImageTransformState(_angle, _skewX, _skewY);
+    } else if (event is EdChangeAlignModeEvent) {
+      _alignMode = event.value;
+      // flutter_bloc - кусок ебучего говна, который невозможно использовать
+      yield EdAlignModeState(event.value);
+      await Future.delayed(Duration(milliseconds: 10));
+      yield EdAlignVerticalState(_verticalAlign);
+      await Future.delayed(Duration(milliseconds: 10));
+      yield EdImageTransformState(_angle, _skewX, _skewY);
+    } else if (event is EdChangeAlignVerticalEvent) {
+      _verticalAlign = event.value;
+      yield EdAlignVerticalState(event.value);
+    } else if (event is EdChangeSkewXEvent) {
+      _skewX = event.value;
+      yield EdImageTransformState(_angle, _skewX, _skewY);
+    }  else if (event is EdChangeSkewYEvent) {
+      _skewY = event.value;
+      yield EdImageTransformState(_angle, _skewX, _skewY);
     } else if (event is EdReturnImageEvent) {
       yield EdImageState(event.image);
     }

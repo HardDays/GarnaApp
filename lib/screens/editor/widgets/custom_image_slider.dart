@@ -1,33 +1,33 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 
-class CustomImageSliderWidget extends StatefulWidget {
-  const CustomImageSliderWidget({Key key}) : super(key: key);
+// class CustomImageSliderWidget extends StatefulWidget {
+//   const CustomImageSliderWidget({Key key}) : super(key: key);
 
-  @override
-  _CustomImageSliderWidgetState createState() =>
-      _CustomImageSliderWidgetState();
-}
+//   @override
+//   _CustomImageSliderWidgetState createState() =>
+//       _CustomImageSliderWidgetState();
+// }
 
-class _CustomImageSliderWidgetState extends State<CustomImageSliderWidget> {
-  double val = 0.5;
-  @override
-  Widget build(BuildContext context) {
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackShape: ImageSliderTrackShape(),
-        thumbShape: ImageSliderThumbShape(),
-        overlayColor: Colors.transparent,
-      ),
-      child: Slider(
-        value: val,
-        onChanged: (value) {
-          val = value;
-          setState(() {});
-        },
-      ),
-    );
-  }
-}
+// class _CustomImageSliderWidgetState extends State<CustomImageSliderWidget> {
+//   double val = 0.5;
+//   @override
+//   Widget build(BuildContext context) {
+//     return SliderTheme(
+//       data: SliderTheme.of(context).copyWith(
+//         trackShape: ImageSliderTrackShape(),
+//         thumbShape: ImageSliderThumbShape(),
+//         overlayColor: Colors.transparent,
+//       ),
+//       child: Slider(
+//         value: val,
+//         onChanged: (value) {
+//           val = value;
+//           setState(() {});
+//         },
+//       ),
+//     );
+//   }
+// }
 
 class ImageSliderThumbShape extends SliderComponentShape {
   final double thumbWidth;

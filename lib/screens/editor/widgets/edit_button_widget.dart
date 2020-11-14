@@ -33,7 +33,7 @@ class EditButtonWidget extends StatelessWidget {
         width: 80,
         height: 80,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
               icon,
