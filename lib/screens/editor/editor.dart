@@ -8,6 +8,7 @@ import 'package:garna/global/constants.dart';
 import 'package:garna/global/utilities/garna_app_icons.dart';
 import 'package:garna/global/widgets/custom_material_button.dart';
 import 'package:garna/main.dart';
+import 'package:garna/models/photo.dart';
 import 'package:garna/screens/editor/bloc/editor_bloc.dart';
 import 'package:garna/screens/editor/widgets/crop_grid_widget.dart';
 import 'package:garna/screens/editor/widgets/custom_image_slider.dart';
@@ -16,14 +17,15 @@ import 'package:garna/screens/editor/widgets/custom_text_button.dart';
 import 'package:garna/screens/editor/widgets/edit_button_widget.dart';
 import 'package:garna/screens/editor/widgets/editor_mode_switcher.dart';
 import 'package:garna/screens/editor/widgets/filter_button.dart';
+import 'package:garna/screens/save/save.dart';
 import 'package:get/get.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 import 'package:image/image.dart' as imageLib;
 
 class EditorScreen extends StatefulWidget {
-  final Asset asset;
-  const EditorScreen({Key key, this.asset}) : super(key: key);
+  final Photo photo;
+  const EditorScreen({Key key, this.photo}) : super(key: key);
 
   static const String id = '/editor';
 
@@ -35,13 +37,15 @@ class _EditorScreenState extends State<EditorScreen> {
 
   final _editorController = EditorController();
   final _pageController = PageController();
-  final _cropGridController = CropGridController();
+  CropGridController _cropGridController;
 
   @override
   void initState() {
     super.initState();
 
-    _editorController.init(widget.asset);
+    _editorController.init(widget.photo);
+
+    _cropGridController = CropGridController(Offset(widget.photo.cropLeftX, widget.photo.cropTopY), Offset(widget.photo.cropRightX, widget.photo.cropBottomY));
   }
 
   @override
@@ -51,8 +55,18 @@ class _EditorScreenState extends State<EditorScreen> {
     super.dispose();
   }
 
+  void _showLoader() {
+    Get.dialog(
+      Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+        )        
+      )
+    );
+  }
+
   void _onFilterModeSelected(FilterMode value) async {
-    _editorController.setCrop(_cropGridController.topLeft, _cropGridController.bottomRight);
+    _editorController.setCrop(_cropGridController.topLeftRatio, _cropGridController.bottomRightRatio);
     _editorController.setFilterMode(value);
   }
 
@@ -110,12 +124,73 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _onCropEnd(Offset topLeft, Offset bottomRight) {
     
-    // _editorController.cropTopLeft.value = topLeft;
-    // _editorController.cropBottomRight.value = bottomRight;
   }
 
   void _onAspect(int aspectX, int aspectY) {
     _cropGridController.cropAspect(aspectX, aspectY);
+  }
+
+  void _onNext() async {
+    _showLoader();
+    _editorController.setCrop(_cropGridController.topLeftRatio, _cropGridController.bottomRightRatio);
+    
+    final original = await _editorController.result(widget.photo.originalPath);
+    final small = await _editorController.result(widget.photo.smallPath);
+    
+    Get.back();
+    Get.to(
+      SaveScreen(
+        photo: widget.photo.copy(
+          contrast: _editorController.contrast.value,
+          exposure: _editorController.exposure.value,
+          whiteBalance: _editorController.whiteBalance.value,
+          saturation: _editorController.saturation.value,
+          angle: _editorController.angle.value,
+          cropBottomY: _editorController.cropBottomRight.value.dy,
+          cropRightX: _editorController.cropBottomRight.value.dx,
+          cropLeftX: _editorController.cropTopLeft.value.dx,
+          cropTopY: _editorController.cropTopLeft.value.dy,
+          skewX: _editorController.skewX.value,
+          skewY: _editorController.skewY.value,
+        ),
+        originalFiltered: original,
+        smallFiltered: small,
+      )
+    );
+  }
+
+  Widget _buildTopButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CustomMaterialButton(
+          margin: const EdgeInsets.all(Constants.standardPaddingDouble / 2),
+          padding: Constants.standardPaddingDouble / 2,
+          onPressed: ()=> Get.back(),
+          color: Colors.transparent,
+          child: Text(
+            'Отмена',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).primaryColorLight,
+            ),
+          ),
+        ),
+        CustomMaterialButton(
+          color: Colors.transparent,
+          onPressed: _onNext,
+          margin: const EdgeInsets.all(Constants.standardPaddingDouble / 2),
+          padding: Constants.standardPaddingDouble / 2,
+          child: Text(
+            'Дальше',
+            style: TextStyle(
+              color: Theme.of(context).accentColor,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildButtons() {
@@ -412,6 +487,7 @@ class _EditorScreenState extends State<EditorScreen> {
         alignment: FractionalOffset.center,
         transform: transform,
         child: Image(
+          fit: BoxFit.cover,
           gaplessPlayback: true,
           image: MemoryImage(image)
         ),
@@ -456,7 +532,9 @@ class _EditorScreenState extends State<EditorScreen> {
           );
         } else {
           return Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+            ),
           );
         }
       }
@@ -468,8 +546,6 @@ class _EditorScreenState extends State<EditorScreen> {
       () {
         if (_editorController.filterMode.value == FilterMode.correction) {
           return CropGridWidget(
-            topLeftRatio: _editorController.cropTopLeft.value,
-            bottomRightRatio: _editorController.cropBottomRight.value,
             controller: _cropGridController,
             onCropEnd: _onCropEnd,
           );
@@ -487,37 +563,7 @@ class _EditorScreenState extends State<EditorScreen> {
         body: SizedBox.expand(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomMaterialButton(
-                    margin: const EdgeInsets.all(Constants.standardPaddingDouble / 2),
-                    padding: Constants.standardPaddingDouble / 2,
-                    onPressed: () {},
-                    color: Colors.transparent,
-                    child: Text(
-                      'Отмена',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).primaryColorLight,
-                      ),
-                    ),
-                  ),
-                  CustomMaterialButton(
-                    color: Colors.transparent,
-                    onPressed: () {},
-                    margin: const EdgeInsets.all(Constants.standardPaddingDouble / 2),
-                    padding: Constants.standardPaddingDouble / 2,
-                    child: Text(
-                      'Дальше',
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildTopButtons(),
               Expanded(
                 child: _buildImageLayers(),
               ),

@@ -21,9 +21,6 @@ class GarnaApp extends StatelessWidget {
       routes: {
         AppGalleryScreen.id: (context) => const AppGalleryScreen(),
         SubscribeScreen.id: (context) => const SubscribeScreen(),
-        EditorScreen.id: (context) => EditorScreen(
-              asset: ModalRoute.of(context).settings.arguments,
-            ),
       },
       // home: ,
     );

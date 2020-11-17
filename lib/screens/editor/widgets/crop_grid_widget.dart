@@ -25,8 +25,13 @@ class CropGridController {
   Offset _topLeft = Offset(0, 0);
   Offset _bottomRight = Offset(0, 0);
 
-  Offset get topLeft => _topLeft;
-  Offset get bottomRight => _bottomRight;
+  Offset _topLeftRatio = Offset(0, 0);
+  Offset _bottomRightRatio = Offset(1.0, 1.0);
+
+  Offset get topLeftRatio => _topLeftRatio;
+  Offset get bottomRightRatio => _bottomRightRatio;
+
+  CropGridController([this._topLeftRatio = const Offset(0, 0), this._bottomRightRatio = const Offset(1.0, 1.0)]);
 
   Function(int, int) _onAspect;
 
@@ -36,13 +41,13 @@ class CropGridController {
 }
 
 class CropGridWidget extends StatefulWidget {
-  final Offset topLeftRatio;
-  final Offset bottomRightRatio;
+  // final Offset topLeftRatio;
+  // final Offset bottomRightRatio;
 
   final CropGridController controller;
   final Function(Offset, Offset) onCropEnd;
   
-  CropGridWidget({this.topLeftRatio, this.bottomRightRatio, this.controller, this.onCropEnd});
+  CropGridWidget({this.controller, this.onCropEnd});
 
   @override
   _CropGridWidgetState createState() => _CropGridWidgetState();
@@ -57,6 +62,8 @@ enum PointerType {
 
 class _CropGridWidgetState extends State<CropGridWidget> {
 
+  bool _initialized = false;
+
   PointerType _pointerType;
 
   Offset _topLeft = Offset(-5, -5);
@@ -68,22 +75,26 @@ class _CropGridWidgetState extends State<CropGridWidget> {
 
     if (widget.controller != null) {
       widget.controller._onAspect = _onAspect;
+      _topLeft = widget.controller._topLeft;
+      _bottomRight = widget.controller._bottomRight;
+      _initialized = true;
     }
   
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration(milliseconds: 300));
       setState(() {
         final size = _renderSize;
-        if (widget.topLeftRatio != null) {
-          _topLeft = Offset(size.dx * widget.topLeftRatio.dx, size.dy * widget.topLeftRatio.dy) - Offset(5, 5);
+        if (widget.controller.topLeftRatio != null) {
+          _topLeft = Offset(size.dx * widget.controller.topLeftRatio.dx, size.dy * widget.controller.topLeftRatio.dy) - Offset(5, 5);
         }
-        if (widget.bottomRightRatio != null) {
-          _bottomRight = Offset(size.dx * widget.bottomRightRatio.dx, size.dy * widget.bottomRightRatio.dy);
+        if (widget.controller.bottomRightRatio != null) {
+          _bottomRight = Offset(size.dx * widget.controller.bottomRightRatio.dx, size.dy * widget.controller.bottomRightRatio.dy);
         } else {
           _bottomRight = _renderSize;
         }
+        _initialized = true;
       });
-       _updateController();
+      _updateController();
     });
   }
 
@@ -94,8 +105,10 @@ class _CropGridWidgetState extends State<CropGridWidget> {
 
   void _updateController() {
     final size = _renderSize;
-    widget.controller._topLeft = Offset((_topLeft.dx + 5) / size.dx, (_topLeft.dy + 5.0) / size.dy);
-    widget.controller._bottomRight = Offset(_bottomRight.dx / size.dx, _bottomRight.dy / size.dy);
+    widget.controller._topLeftRatio = Offset((_topLeft.dx + 5) / size.dx, (_topLeft.dy + 5.0) / size.dy);
+    widget.controller._bottomRightRatio = Offset(_bottomRight.dx / size.dx, _bottomRight.dy / size.dy);
+    widget.controller._topLeft = _topLeft;
+    widget.controller._bottomRight = _bottomRight;
   }
 
   void _onAspect(int aspectX, int aspectY) {
@@ -191,24 +204,8 @@ class _CropGridWidgetState extends State<CropGridWidget> {
 
     final renderSize = _renderSize;
     
-    // final gcd = size.dy.toInt().gcd(size.dx.toInt());
-    // print(gcd);  
-    // print(size.dx / gcd);z
-    // print(size. dy / gcd);
-    // todo: offsets
-
-    final size = _bottomRight - _topLeft;
-
     final topLeftMargin = _topLeft + Offset(5, 5);
     final bottomRightMargin = renderSize - _bottomRight;
-    // print(topLeftMargin);
-
-    // print(bottomRightMargin);
-
-    //print(_topLeft + Offset(5, 5));
-  
-    // _topLeft = renderSize * 0.5 - size * 0.5;
-    // _bottomRight = renderSize * 0.5 + size * 0.5;
 
     if (widget.onCropEnd != null) {
       widget.onCropEnd(topLeftMargin, bottomRightMargin);
@@ -232,7 +229,7 @@ class _CropGridWidgetState extends State<CropGridWidget> {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _initialized ? Colors.white : Colors.transparent, 
               shape: BoxShape.circle
             ),
           )
@@ -246,7 +243,7 @@ class _CropGridWidgetState extends State<CropGridWidget> {
       left: x + 15,
       top: y + 15,
       child: Container(
-        color: Colors.white,
+        color: _initialized ? Colors.white : Colors.transparent,
         width: width,
         height: height,
       )
@@ -258,7 +255,7 @@ class _CropGridWidgetState extends State<CropGridWidget> {
       child: ClipPath(
         clipper: RectClipper(_topLeft + Offset(15, 15), _bottomRight + Offset(15, 15)),
         child: Container(
-          color: Colors.black.withOpacity(0.5),
+          color: _initialized ? Colors.black.withOpacity(0.5) : Colors.transparent,
         ),
       ),
     );

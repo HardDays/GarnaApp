@@ -12,7 +12,11 @@ class Photo {
   final double cropBottomY;
   final double skewX;
   final double skewY;
-  final String originalImagePath;
+  final String originalPath;
+  final String smallPath;
+  final String mediumPath;
+  final String filteredOriginalPath;
+  final String filteredSmallPath;
 
   Photo({
     this.id,
@@ -27,17 +31,88 @@ class Photo {
     this.cropBottomY = 1.0,
     this.skewX = 0.0,
     this.skewY = 0.0,
-    this.originalImagePath
+    this.originalPath,
+    this.smallPath,
+    this.mediumPath,
+    this.filteredOriginalPath,
+    this.filteredSmallPath
   });
 
-  factory Photo.empty(String path) {
+  factory Photo.empty(String originalPath, String smallPath, String mediumPath, String filteredSmallPath, String filteredOriginalPath) {
     return Photo(
-      originalImagePath: path
+      originalPath: originalPath,
+      smallPath: smallPath,
+      mediumPath: mediumPath,
+      filteredOriginalPath: filteredOriginalPath,
+      filteredSmallPath: filteredSmallPath
+    );
+  }
+
+  Photo copy({double contrast, double exposure, double whiteBalance, double saturation, double angle, double cropLeftX, double cropTopY, double cropRightX, double cropBottomY, double skewX, double skewY }) {
+    return Photo(
+      id: id,
+      smallPath: smallPath,
+      originalPath: originalPath,
+      mediumPath: mediumPath,
+      filteredOriginalPath: filteredOriginalPath,
+      filteredSmallPath: filteredSmallPath,
+      contrast: contrast ?? this.contrast,
+      whiteBalance: whiteBalance ?? this.whiteBalance,
+      exposure: exposure ?? this.exposure,
+      saturation: saturation ?? this.saturation,
+      angle: angle ?? this.angle,
+      cropLeftX: cropLeftX ?? this.cropLeftX,
+      cropTopY: cropTopY ?? this.cropTopY,
+      cropRightX: cropRightX ?? this.cropRightX,
+      cropBottomY: cropBottomY ?? this.cropBottomY,
+      skewX: skewX ?? this.skewX,
+      skewY: skewY ?? this.skewY,
+    );
+  }
+
+  factory Photo.fromJson(Map<String, dynamic> json) {
+    return Photo(
+      id: json['id'],
+      contrast: json['contrast'],
+      exposure: json['exposure'],
+      whiteBalance: json['whiteBalance'],
+      saturation: json['saturation'],
+      angle: json['angle'],
+      cropLeftX: json['cropLeftX'],
+      cropRightX: json['cropRightX'],
+      cropBottomY: json['cropBottomY'],
+      cropTopY: json['cropTopY'],
+      skewX: json['skewX'],
+      skewY: json['skewY'],
+      originalPath: json['originalPath'],
+      smallPath: json['smallPath'],
+      mediumPath: json['mediumPath'],
+      filteredOriginalPath: json['filteredOriginalPath'],
+      filteredSmallPath: json['filteredSmallPath']
     );
   }
 
   Map<String, dynamic> toJson() {
-    
+    return {
+      'id': id,
+      'contrast': contrast,
+      'exposure': exposure,
+      'whiteBalance': whiteBalance,
+      'saturation': saturation,
+      'angle': angle,
+      'cropLeftX': cropLeftX,
+      'cropTopY': cropTopY,
+      'cropRightX': cropRightX,
+      'cropBottomY': cropBottomY,
+      'skewX': skewX,
+      'skewY': skewY,
+      'originalPath': originalPath,
+      'smallPath': smallPath,
+      'mediumPath': mediumPath,
+      'filteredOriginalPath': filteredOriginalPath,
+      'filteredSmallPath': filteredSmallPath,
+    };
   }
+  
 
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:garna/global/constants.dart';
 import 'package:garna/global/widgets/custom_material_button.dart';
 import 'package:garna/screens/editor/bloc/editor_bloc.dart';

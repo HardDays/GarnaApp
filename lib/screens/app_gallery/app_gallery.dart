@@ -1,12 +1,18 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:garna/global/constants.dart';
 import 'package:garna/global/utilities/garna_app_icons.dart';
+import 'package:garna/models/photo.dart';
 import 'package:garna/screens/app_gallery/widgets/app_gallery_photo.dart';
 import 'package:garna/screens/app_gallery/widgets/bottom_gallery_menu.dart';
 import 'package:garna/screens/app_gallery/widgets/custom_snackbar_widget.dart';
 import 'package:garna/screens/app_gallery/widgets/empty_gallery.dart';
+import 'package:garna/screens/editor/editor.dart';
+import 'package:get/get.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 
 import 'bloc/app_gallery_bloc.dart';
 
@@ -20,86 +26,204 @@ class AppGalleryScreen extends StatefulWidget {
 }
 
 class _AppGalleryScreenState extends State<AppGalleryScreen> {
-  AppGalleryBloc _appGalleryBloc;
+
+  final _galleryController = AppGalleryController();
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _appGalleryBloc ??= AppGalleryBloc();
+  void initState() {
+    super.initState();
+    
+    _galleryController.init();   
   }
 
-  @override
-  void dispose() {
-    _appGalleryBloc.close();
-    super.dispose();
+  void _showLoader() {
+    Get.dialog(
+      Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+        )        
+      )
+    );
+  }
+
+  void _onAddPhoto() async {
+    try {
+      final res = await MultiImagePicker.pickImages(
+        materialOptions: const MaterialOptions(
+          actionBarColor: '#000000',
+          statusBarColor: '#000000',
+          actionBarTitle: 'Альбом',
+          selectCircleStrokeColor: '#9B712F',
+          selectionLimitReachedText: 'Больше выбрать нельзя',
+          allViewTitle: 'Все фото',
+        ),
+        cupertinoOptions: const CupertinoOptions(
+          backgroundColor: '#000000',
+          // selectionCharacter:
+        ),
+        maxImages: 10,
+      );
+      _showLoader();
+      await _galleryController.addPhotos(res);
+      Get.back();
+    } catch (ex) {
+      Get.back();
+    }
+  }
+
+  void _onPhoto(int index) {
+    if ( _galleryController.selectedIndex.value != index) {
+      _galleryController.selectedIndex.value = index;
+    } else {
+      _galleryController.selectedIndex.value = null;
+    }
+  }
+  
+  void _onCancel() {
+    _galleryController.selectedIndex.value = null;
+  }
+
+  void _onEdit() async {
+    final res = await Get.to(
+      EditorScreen(
+        photo: _galleryController.photos[_galleryController.selectedIndex.value]
+      )
+    );
+    print(res);
+  }
+
+  void _onMore() {
+    Get.bottomSheet(
+      CupertinoActionSheet(
+        message: const Text('Действия'),
+        cancelButton: CupertinoActionSheetAction(
+            // isDestructiveAction: true,
+        onPressed: ()=> Get.back(),
+        child: const Text('Отмена')),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {},
+            child: const Text('Сохранить в фотопленку'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {},
+            child: const Text('Скопировать правки'),
+          ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {},
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotos(List<Photo> photos) {
+    return Padding(
+      padding: const EdgeInsets.only(top: Constants.standardPaddingDouble),
+      child: GridView.count(
+        // shrinkWrap: true,
+        crossAxisCount: 3,
+        childAspectRatio: Constants.gridViewChildAspectRatio,
+        children: List.generate(photos.length, 
+          (index) {
+            final photo = photos[index];
+            return Container(
+              margin: Constants.gridViewElementMargin,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: photo == null || _galleryController.selectedIndex.value == index ? Theme.of(context).accentColor : Colors.transparent
+                ),
+              ),
+              child: photo != null ? 
+              InkWell(
+                onTap: ()=> _onPhoto(index),
+                child: Image(
+                  fit: BoxFit.cover,
+                  image: FileImage(File(photo.filteredSmallPath)),
+                ),  
+              ) : 
+              Container(),
+            );
+          }
+        )
+      ),
+    );    
+  }
+
+  Widget _buildGallery() {
+    return Obx(
+      () {
+        final photos = _galleryController.photos.value;
+        if (photos != null) {
+          if (photos.isNotEmpty) {
+            return _buildPhotos(photos);
+          } else {
+            return _buildPhotos(List.generate(9, (index) => null));
+          }     
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+            ),
+          ); 
+        }
+      }
+    );
+  }
+
+  Widget _buildActions() {
+     return Obx(
+      () {
+        if (_galleryController.selectedIndex.value != null) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              BottomGalleryMenuItemWidget(
+                onPressed: _onCancel,
+                icon: GarnaAppIcons.cancel,
+                title: 'Отмена',
+              ),
+              BottomGalleryMenuItemWidget(
+                onPressed: _onEdit,
+                icon: GarnaAppIcons.icedit,
+                title: 'Редактировать',
+              ),
+              BottomGalleryMenuItemWidget(
+                onPressed: _onMore,
+                icon: GarnaAppIcons.icmore,
+                title: 'Еще',
+              ),
+            ],
+          );
+        } else {
+          return IconButton(
+            iconSize: 35,
+            icon: Icon(
+              GarnaAppIcons.plus,
+              color: Theme.of(context).accentColor,
+            ),
+            onPressed: _onAddPhoto
+          );
+        }             
+      }         
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => _appGalleryBloc,
-      child: Scaffold(
-        body: SafeArea(
-          child: Stack(
-            children: [
-              BlocBuilder<AppGalleryBloc, AppGalleryState>(
-                buildWhen: (previous, current) =>
-                    current is AppGalUpdateAppGalleryState,
-                builder: (context, state) {
-                  if (BlocProvider.of<AppGalleryBloc>(context).assets.isEmpty) {
-                    return const EmptyGalleryWidget();
-                    // return const SizedBox();
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                        top: Constants.standardPaddingDouble),
-                    child: GridView.count(
-                      // shrinkWrap: true,
-                      crossAxisCount: 3,
-                      childAspectRatio: Constants.gridViewChildAspectRatio,
-                      children: _appGalleryBloc.assets
-                          .map(
-                            (e) => AppGalleryPhotoWidget(asset: e),
-                          )
-                          .cast<Widget>()
-                          .toList(),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: CustomSnackBarWidget(),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: BlocBuilder<AppGalleryBloc, AppGalleryState>(
-                  buildWhen: (previous, current) =>
-                      current is AppGalSelectedAssetState,
-                  builder: (context, state) {
-                    return _appGalleryBloc.selectedAsset == null
-                        ? IconButton(
-                            iconSize: 35,
-                            icon: Icon(
-                              GarnaAppIcons.plus,
-                              color: Theme.of(context).accentColor,
-                            ),
-                            onPressed: () {
-                              _appGalleryBloc.add(AppGalLoadPhotosEvent());
-                            },
-                          )
-                        : const BottomGalleryMenuWidget();
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+    return Scaffold(
+      body: SafeArea(
+        child: _buildGallery()
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
+        color: Colors.black,
+        width: MediaQuery.of(context).size.width,
+        height: 70,
+        child: _buildActions(),
+      )
     );
   }
 }

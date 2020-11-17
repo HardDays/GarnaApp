@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:garna/screens/app_gallery/bloc/app_gallery_bloc.dart';
 
 import '../../../global/constants.dart';
@@ -15,19 +14,19 @@ class _CustomSnackBarWidgetState extends State<CustomSnackBarWidget> {
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<AppGalleryBloc>(context)
-        .where((state) =>
-            state is AppGalShowSnackbarState ||
-            state is AppGalCloseSnackbarState)
-        .listen((st) {
-      if (st is AppGalShowSnackbarState) {
-        message = st.message;
-        isActive = true;
-      } else {
-        isActive = false;
-      }
-      setState(() {});
-    });
+    // BlocProvider.of<AppGalleryBloc>(context)
+    //     .where((state) =>
+    //         state is AppGalShowSnackbarState ||
+    //         state is AppGalCloseSnackbarState)
+    //     .listen((st) {
+    //   if (st is AppGalShowSnackbarState) {
+    //     message = st.message;
+    //     isActive = true;
+    //   } else {
+    //     isActive = false;
+    //   }
+    //   setState(() {});
+    // });
   }
 
   bool isActive = false;
@@ -36,8 +35,8 @@ class _CustomSnackBarWidgetState extends State<CustomSnackBarWidget> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onVerticalDragEnd: (details) {
-        BlocProvider.of<AppGalleryBloc>(context)
-            .add(AppGalCloseSnackbarEvent());
+        // BlocProvider.of<AppGalleryBloc>(context)
+        //     .add(AppGalCloseSnackbarEvent());
       },
       child: AnimatedContainer(
         duration: Constants.standardAnimationDuration,
