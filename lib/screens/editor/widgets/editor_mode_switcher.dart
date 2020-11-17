@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:garna/global/constants.dart';
 import 'package:garna/global/widgets/custom_material_button.dart';
 import 'package:garna/screens/editor/bloc/editor_bloc.dart';
@@ -71,8 +70,7 @@ class _EditorModeSwitcherWidgetState extends State<EditorModeSwitcherWidget> {
                         margin: EdgeInsets.zero,
                         padding: Constants.standardPaddingDouble / 2,
                         onPressed: () {
-                          BlocProvider.of<EditorBloc>(context)
-                              .pageController
+                          widget.controller
                               .animateToPage((index / 2).ceil(),
                                   duration: Constants.standardAnimationDuration,
                                   curve: Curves.linear);

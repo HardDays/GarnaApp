@@ -2,52 +2,139 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+class RectClipper extends CustomClipper<Path> {
+  final Offset topLeftRatio;
+  final Offset topRightRatio;
+
+  RectClipper(this.topLeftRatio, this.topRightRatio);
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.addRect(Rect.fromPoints(topLeftRatio, topRightRatio));
+    path.addRect(new Rect.fromLTWH(0.0, 0.0, size.width, size.height));
+    path.fillType = PathFillType.evenOdd;
+    return path;
+  }
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+class CropGridController {
+
+  Offset _topLeft = Offset(0, 0);
+  Offset _bottomRight = Offset(0, 0);
+
+  Offset get topLeft => _topLeft;
+  Offset get bottomRight => _bottomRight;
+
+  Function(int, int) _onAspect;
+
+  void cropAspect(int aspectX, int aspectY) {
+    _onAspect(aspectX, aspectY);
+  }
+}
+
 class CropGridWidget extends StatefulWidget {
-  const CropGridWidget({
-    Key key,
-  }) : super(key: key);
+  final Offset topLeftRatio;
+  final Offset bottomRightRatio;
+
+  final CropGridController controller;
+  final Function(Offset, Offset) onCropEnd;
+  
+  CropGridWidget({this.topLeftRatio, this.bottomRightRatio, this.controller, this.onCropEnd});
 
   @override
   _CropGridWidgetState createState() => _CropGridWidgetState();
 }
 
 enum PointerType {
-  topLeft, topRight, bottomLeft, bottomRight
+  topLeft, 
+  topRight, 
+  bottomLeft, 
+  bottomRight
 }
 
 class _CropGridWidgetState extends State<CropGridWidget> {
 
   PointerType _pointerType;
 
-  Offset _topLeft = Offset(0, 0);
-  Offset _bottomRight = Offset(100, 100);
+  Offset _topLeft = Offset(-5, -5);
+  Offset _bottomRight = Offset(-5, -5);
 
-  // void _onTopLeft(Velocity velocity, Offset offset) {
-  //   setState(() {
-  //     RenderBox render = context.findRenderObject();
-  //     final local = render.globalToLocal(offset);
-  //     _topLeft = local;
-  //   });
-  // }
+  @override
+  void initState() {
+    super.initState();
 
-  // void _onBottomRight(Velocity velocity, Offset offset) {
-  //   setState(() {
-  //     RenderBox render = context.findRenderObject();
-  //     final local = render.globalToLocal(offset);
-  //     _bottomRight = local;
-  //   });
-  // }
+    if (widget.controller != null) {
+      widget.controller._onAspect = _onAspect;
+    }
+  
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 300));
+      setState(() {
+        final size = _renderSize;
+        if (widget.topLeftRatio != null) {
+          _topLeft = Offset(size.dx * widget.topLeftRatio.dx, size.dy * widget.topLeftRatio.dy) - Offset(5, 5);
+        }
+        if (widget.bottomRightRatio != null) {
+          _bottomRight = Offset(size.dx * widget.bottomRightRatio.dx, size.dy * widget.bottomRightRatio.dy);
+        } else {
+          _bottomRight = _renderSize;
+        }
+      });
+       _updateController();
+    });
+  }
 
-  void _onPointerMove(PointerMoveEvent event) {
+  Offset get _renderSize {
     RenderBox render = context.findRenderObject();
-    final position = event.localPosition;
+    return Offset(render.size.width, render.size.height) - Offset(25, 25);
+  }
 
-    final dx = min(render.size.width - 25, max(-5.0, position.dx));
-    final dy = min(render.size.height - 25, max(-5.0, position.dy));
+  void _updateController() {
+    final size = _renderSize;
+    widget.controller._topLeft = Offset((_topLeft.dx + 5) / size.dx, (_topLeft.dy + 5.0) / size.dy);
+    widget.controller._bottomRight = Offset(_bottomRight.dx / size.dx, _bottomRight.dy / size.dy);
+  }
+
+  void _onAspect(int aspectX, int aspectY) {
+    if (aspectX == 0 && aspectY == 0) {
+      setState(() {
+        _topLeft = Offset(-5, -5);
+        _bottomRight = _renderSize;
+      });
+    } else {
+      final size = _renderSize;
+      final ratio = (size.dy * aspectX) / (size.dy * aspectY);
+
+      final width = size.dy * ratio;
+      final height = size.dy;
+
+      double scale = 1;
+      if (width > size.dx) {
+        scale = size.dx / width;
+      } else if (height > size.dy) {
+        scale = size.dy / height;
+      }
+
+      setState(() {
+        _topLeft = size * 0.5 - Offset(width * scale, height * scale) * 0.5 - Offset(5, 5);
+        _bottomRight = size * 0.5 + Offset(width * scale, height * scale) * 0.5;
+      });
+    }
+    _updateController();
+  }
+ 
+  void _onPointerMove(PointerMoveEvent event) {
+    final size = _renderSize;
+    final position = event.localPosition - Offset(15, 15);
+
+    final dx = min(size.dx, max(-5.0, position.dx));
+    final dy = min(size.dy, max(-5.0, position.dy));
 
     final maxSize = 50.0;
    // print('${dx} ${_bottomRight.dx - dx}');
-
     if (_pointerType == PointerType.topLeft) {
       setState(() {
         _topLeft = Offset(_bottomRight.dx - dx < maxSize ? _topLeft.dx : dx, _bottomRight.dy - dy < maxSize ? _topLeft.dy : dy);
@@ -66,7 +153,29 @@ class _CropGridWidgetState extends State<CropGridWidget> {
         _topLeft = Offset(_topLeft.dx, _bottomRight.dy - dy < maxSize ? _topLeft.dy : dy);
         _bottomRight = Offset(dx - _topLeft.dx < maxSize ? _bottomRight.dx : dx, _bottomRight.dy);
       });
+    } else {
+      final dx = event.delta.dx;
+      final dy = event.delta.dy;
+      if (_topLeft.dx + dx >= -5 && _bottomRight.dx + dx < size.dx) {
+        setState(() {
+          _topLeft += Offset(dx, 0);
+          _bottomRight += Offset(dx, 0);
+        });
+      }
+      
+      if (_topLeft.dy + dy >= -5 && _bottomRight.dy + dy < size.dy) {
+        setState(() {
+          _topLeft += Offset(0, dy);
+          _bottomRight += Offset(0, dy);
+        });
+      }
+      // if (rect.contains(newBottomRight)) {
+      //   setState(() {
+      //     _bottomRight = newBottomRight;
+      //   });
+      // }
     }
+    _updateController();
   }
 
   void _onPointerStart(PointerType type) {
@@ -79,6 +188,31 @@ class _CropGridWidgetState extends State<CropGridWidget> {
     setState(() {
       _pointerType = null;
     });
+
+    final renderSize = _renderSize;
+    
+    // final gcd = size.dy.toInt().gcd(size.dx.toInt());
+    // print(gcd);  
+    // print(size.dx / gcd);z
+    // print(size. dy / gcd);
+    // todo: offsets
+
+    final size = _bottomRight - _topLeft;
+
+    final topLeftMargin = _topLeft + Offset(5, 5);
+    final bottomRightMargin = renderSize - _bottomRight;
+    // print(topLeftMargin);
+
+    // print(bottomRightMargin);
+
+    //print(_topLeft + Offset(5, 5));
+  
+    // _topLeft = renderSize * 0.5 - size * 0.5;
+    // _bottomRight = renderSize * 0.5 + size * 0.5;
+
+    if (widget.onCropEnd != null) {
+      widget.onCropEnd(topLeftMargin, bottomRightMargin);
+    }
   }
 
   Widget _buildButton(double x, double y, PointerType type) {
@@ -120,14 +254,25 @@ class _CropGridWidgetState extends State<CropGridWidget> {
   }
 
   Widget _buildBackground(double width, double height) {
+    return IgnorePointer(
+      child: ClipPath(
+        clipper: RectClipper(_topLeft + Offset(15, 15), _bottomRight + Offset(15, 15)),
+        child: Container(
+          color: Colors.black.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForeground(double width, double height) {
     return Positioned(
-      left: _topLeft.dx + 15,
       top: _topLeft.dy + 15,
+      left: _topLeft.dx + 15,
+      width: width,
+      height: height,
       child: Container(
-        width: width,
-        height: height,
-        color: Colors.black.withOpacity(0.3),
-      )
+        color: Colors.transparent,
+      ),
     );
   }
 
@@ -140,7 +285,7 @@ class _CropGridWidgetState extends State<CropGridWidget> {
       child: Stack(
         children: [
           _buildBackground(width, height),
-
+          _buildForeground(width, height),
           _buildLine(_topLeft.dx, _topLeft.dy, width, 2),
           _buildLine(_topLeft.dx, _bottomRight.dy, width, 2),
           _buildLine(_topLeft.dx, _topLeft.dy, 2, height),
@@ -155,31 +300,6 @@ class _CropGridWidgetState extends State<CropGridWidget> {
           _buildButton(_bottomRight.dx, _bottomRight.dy, PointerType.bottomRight),
           _buildButton(_topLeft.dx, _bottomRight.dy, PointerType.bottomLeft),
           _buildButton(_bottomRight.dx, _topLeft.dy, PointerType.topRight),
-          // Positioned(
-          //   left: _topLeft.dx + 15,
-          //   top: _topLeft.dy + 15,
-          //   child: _buildHorizontalLine(_topLeft, _bottomRight)
-          // ),
-          // Positioned(
-          //   left: _topLeft.dx + 15,
-          //   top: _bottomRight.dy + 15,
-          //   child: _buildHorizontalLine(_topLeft, _bottomRight)
-          // ),
-          // Positioned(
-          //   left: _topLeft.dx + 15,
-          //   top: _topLeft.dy + 15,
-          //   child: _buildVerticalLine(_topLeft, _bottomRight)
-          // ),
-          // Positioned(
-          //   left: _bottomRight.dx + 15,
-          //   top: _topLeft.dy + 15,
-          //   child: _buildVerticalLine(_topLeft, _bottomRight)
-          // ),
-          // Positioned(
-          //   left: _topLeft.dx + 5,
-          //   top: _bottomRight.dy + 5,
-          //   child: _buildVerticalLine(_topLeft, _bottomRight)
-          // ),
         ],
       )
     );

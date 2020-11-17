@@ -35,7 +35,8 @@ dependencies:
   multi_image_picker: ^4.7.14
   image_picker: ^0.6.7+8
   path_provider: ^1.6.16
-  # rxdart: ^0.24.1
+  #rxdart: ^0.24.1
+  get: ^3.17.1 
   photofilters: ^2.0.1
   bitmap: ^0.0.6
   flutter_image_compress: ^0.7.0
