@@ -46,6 +46,14 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
     );
   }
 
+  void _showSnackbar(String message) {
+    Get.rawSnackbar(
+      message: message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Constants.colorDarkGold,
+    );
+  }
+
   void _onAddPhoto() async {
     try {
       final res = await MultiImagePicker.pickImages(
@@ -118,9 +126,12 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
     );
   }
 
-  void _onSavePhoto() {
-    _galleryController.savePhoto();
+  void _onSavePhoto() async {
     Get.back();
+    _showLoader();
+    await _galleryController.savePhoto();
+    Get.back();
+    _showSnackbar('Фото сохранено в галерею');  
   }
 
   void _onCopyPhoto() async {
@@ -128,11 +139,13 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
     _showLoader();
     await _galleryController.copyPhoto();
     Get.back();
+    _showSnackbar('Фото скопировано');  
   }
 
   void _onRemovePhoto() {
     _galleryController.removePhoto();
     Get.back();
+    _showSnackbar('Фото удалено');  
   }
   
   Widget _buildPhotos(List<Photo> photos) {

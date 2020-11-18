@@ -56,6 +56,11 @@ class _SaveScreenState extends State<SaveScreen> {
     await _controller.save(widget.photo, widget.originalFiltered, widget.smallFiltered);
     Get.back();
     Get.offAll(AppGalleryScreen(), arguments: true);
+    Get.rawSnackbar(
+      message: 'Сохранено',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Constants.colorDarkGold,
+    );
   }
 
   Widget _buildTopButtons() {

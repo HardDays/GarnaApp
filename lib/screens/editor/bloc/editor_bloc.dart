@@ -128,7 +128,7 @@ class EditorController extends GetxController {
   Offset _cropTopLeft = Offset(0, 0);
   Offset _cropBottomRight = Offset(0, 0);
 
-  final filterMode = FilterMode.correction.obs;
+  final filterMode = FilterMode.exposure.obs;
   final alignMode = AlignMode.alignment.obs;
   final alignType = AlignType.vertical.obs;
 
@@ -242,7 +242,7 @@ class EditorController extends GetxController {
       final dv = (0.5 - -0.5) / 30;
       if ((value - _saturation).abs() > dv) {
         _saturation = value;
-        mediumImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
+        smallImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
       } 
     } else {
       _saturation = value;
