@@ -71,25 +71,24 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
     }
   }
 
-  void _onPhoto(int index) {
+  void _onSelectPhoto(int index) {
     if ( _galleryController.selectedIndex.value != index) {
       _galleryController.selectedIndex.value = index;
     } else {
       _galleryController.selectedIndex.value = null;
     }
   }
-  
+
   void _onCancel() {
     _galleryController.selectedIndex.value = null;
   }
 
   void _onEdit() async {
-    final res = await Get.to(
+    Get.to(
       EditorScreen(
         photo: _galleryController.photos[_galleryController.selectedIndex.value]
       )
     );
-    print(res);
   }
 
   void _onMore() {
@@ -102,16 +101,16 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
         child: const Text('Отмена')),
         actions: [
           CupertinoActionSheetAction(
-            onPressed: () {},
+            onPressed: _onSavePhoto,
             child: const Text('Сохранить в фотопленку'),
           ),
           CupertinoActionSheetAction(
-            onPressed: () {},
+            onPressed: _onCopyPhoto,
             child: const Text('Скопировать правки'),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
-            onPressed: () {},
+            onPressed: _onRemovePhoto,
             child: const Text('Удалить'),
           ),
         ],
@@ -119,6 +118,23 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
     );
   }
 
+  void _onSavePhoto() {
+    _galleryController.savePhoto();
+    Get.back();
+  }
+
+  void _onCopyPhoto() async {
+    Get.back();
+    _showLoader();
+    await _galleryController.copyPhoto();
+    Get.back();
+  }
+
+  void _onRemovePhoto() {
+    _galleryController.removePhoto();
+    Get.back();
+  }
+  
   Widget _buildPhotos(List<Photo> photos) {
     return Padding(
       padding: const EdgeInsets.only(top: Constants.standardPaddingDouble),
@@ -138,7 +154,7 @@ class _AppGalleryScreenState extends State<AppGalleryScreen> {
               ),
               child: photo != null ? 
               InkWell(
-                onTap: ()=> _onPhoto(index),
+                onTap: ()=> _onSelectPhoto(index),
                 child: Image(
                   fit: BoxFit.cover,
                   image: FileImage(File(photo.filteredSmallPath)),

@@ -20,7 +20,7 @@ class EditButtonWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomMaterialButton(
           // margin: EdgeInsets.zero,
-      margin: const EdgeInsets.all(Constants.standardPaddingDouble / 2),
+      margin: const EdgeInsets.only(left: Constants.standardPaddingDouble / 2, right: Constants.standardPaddingDouble / 2),
       padding: 0,
       color: Colors.transparent,
       onPressed: () {
@@ -28,15 +28,14 @@ class EditButtonWidget extends StatelessWidget {
           onPressed();
         }
       },
-      child: SizedBox(
+      child: Container(
         width: 80,
-        height: 80,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 38,
+              size: 30,
               color: selected 
                   ? Theme.of(context).accentColor
                   : Theme.of(context).primaryColorLight,

@@ -11,6 +11,8 @@ class SaveController {
   final _database = PhotoDatabase();
 
   Future save(Photo photo, Uint8List original, Uint8List small) async {
+    PaintingBinding.instance.imageCache.clear();
+
     final smallFile = File(photo.filteredSmallPath);
     await smallFile.writeAsBytes(small);
 
@@ -18,8 +20,6 @@ class SaveController {
     await originalFile.writeAsBytes(original);
 
     await _database.update(photo);
-
-    PaintingBinding.instance.imageCache.clear();
   }
 
 }

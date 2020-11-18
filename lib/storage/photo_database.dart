@@ -62,8 +62,12 @@ class PhotoDatabase {
     }
   }
 
-  Future<Photo> remove(Photo photo) {
+  Future<Photo> remove(Photo photo) async {
+    try {
+      await _database.delete(_table, where: 'id = ${photo.id}');
+    } catch (ex) {
 
+    }
   }
   
 }

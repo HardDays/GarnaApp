@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:garna/models/photo.dart';
 import 'package:garna/storage/photo_database.dart';
 import 'package:path/path.dart';
@@ -69,6 +70,56 @@ class AppGalleryController extends GetxController {
       } catch (ex) {
         print(ex);
       }
+    }
+  }
+
+  Future copyPhoto() async {
+    final current = photos.value[selectedIndex.value];
+    
+    final original = await _generateName('original_c', basename(current.originalPath));
+    final medium = await _generateName('medium_c', basename(current.originalPath));
+    final small = await _generateName('small_c', basename(current.originalPath));
+    final filteredOriginal = await _generateName('filtered_original_c', basename(current.originalPath));
+    final filteredSmall = await _generateName('filtered_small_c', basename(current.originalPath));
+
+    await File(current.originalPath).copy(original);
+    await File(current.mediumPath).copy(medium);
+    await File(current.smallPath).copy(small);
+    await File(current.filteredOriginalPath).copy(filteredOriginal);
+    await File(current.filteredSmallPath).copy(filteredSmall);
+
+    final copy = current.copy(
+      isNew: true,
+      originalPath: original,
+      smallPath: small,
+      mediumPath: medium,
+      filteredOriginalPath: filteredOriginal,
+      filteredSmallPath: filteredSmall
+    );
+
+    final photo = await _database.create(copy);
+    if (photo != null) {
+      photos.add(photo); 
+    }
+  }
+
+  Future savePhoto() async {
+    await GallerySaver.saveImage(photos.value[selectedIndex.value].filteredOriginalPath);
+  }
+
+  Future removePhoto() async {
+    try {
+      final photo = photos.value[selectedIndex.value];
+      await File(photo.originalPath).delete();
+      await File(photo.mediumPath).delete();
+      await File(photo.smallPath).delete();
+      await File(photo.filteredSmallPath).delete();
+      await File(photo.filteredOriginalPath).delete();
+
+      await _database.remove(photo);
+      photos.removeAt(selectedIndex.value);
+      selectedIndex.value = null;
+    } catch (ex) {
     }
   }
 }

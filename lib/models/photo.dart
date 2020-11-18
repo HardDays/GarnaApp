@@ -48,14 +48,32 @@ class Photo {
     );
   }
 
-  Photo copy({double contrast, double exposure, double whiteBalance, double saturation, double angle, double cropLeftX, double cropTopY, double cropRightX, double cropBottomY, double skewX, double skewY }) {
+  Photo copy({
+    double contrast, 
+    double exposure, 
+    double whiteBalance, 
+    double saturation, 
+    double angle, 
+    double cropLeftX, 
+    double cropTopY, 
+    double cropRightX, 
+    double cropBottomY, 
+    double skewX, 
+    double skewY,
+    String smallPath,
+    String originalPath,
+    String mediumPath,
+    String filteredOriginalPath,
+    String filteredSmallPath,
+    bool isNew = false
+  }) {
     return Photo(
-      id: id,
-      smallPath: smallPath,
-      originalPath: originalPath,
-      mediumPath: mediumPath,
-      filteredOriginalPath: filteredOriginalPath,
-      filteredSmallPath: filteredSmallPath,
+      id: isNew ? null : id ,
+      smallPath: smallPath ?? this.smallPath,
+      originalPath: originalPath ?? this.originalPath,
+      mediumPath: mediumPath ?? this.mediumPath,
+      filteredOriginalPath: filteredOriginalPath ?? this.filteredOriginalPath,
+      filteredSmallPath: filteredSmallPath ?? this.filteredSmallPath,
       contrast: contrast ?? this.contrast,
       whiteBalance: whiteBalance ?? this.whiteBalance,
       exposure: exposure ?? this.exposure,

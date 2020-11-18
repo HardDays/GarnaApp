@@ -82,7 +82,6 @@ class _SaveScreenState extends State<SaveScreen> {
   Widget _buildImage() {
     return  InteractiveViewer(
       child: Image(
-        fit: BoxFit.cover,
         gaplessPlayback: true,
         image: MemoryImage(widget.originalFiltered)
       ),

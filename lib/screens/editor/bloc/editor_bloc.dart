@@ -7,7 +7,8 @@ import 'dart:ui' as ui;
 import 'package:bitmap/bitmap.dart';
 import 'package:bitmap/transformations.dart' as bmp;
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:vector_math/vector_math.dart' as vm;
+import 'package:image/image.dart' as img;
 import 'package:garna/models/photo.dart';
 import 'package:get/get.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
@@ -17,11 +18,11 @@ import 'package:path_provider/path_provider.dart';
 // part 'editor_state.dart';
 
 enum FilterMode {
-  correction,
-  contrast,
   exposure,
+  contrast,
   saturation,
-  whiteBalance
+  whiteBalance,
+  correction,
 }
 
 enum AlignMode {
@@ -34,11 +35,84 @@ enum AlignType {
   horizontal
 }
 
+Bitmap applyFilters(Map<String, dynamic> params) {
+  final contrastBmp = bmp.contrast(params['bitmap'], params['contrast']);
+  return bmp.adjustColor(contrastBmp, exposure: params['exposure'], saturation: params['saturation'], blacks: params['whiteBalance'].toInt());
+}
+
+Future<Bitmap> applyTransform(Map<String, dynamic> params) async {
+  final bitmap = params['bitmap'] as Bitmap;
+  final cropTopLeft = params['cropTopLeft'] as Offset;
+  final cropBottomRight = params['cropBottomRight'] as Offset;
+
+
+  // final image = img.Image.fromBytes(bitmap.width, bitmap.height, bitmap.content);
+
+  // final rotated = img.copyRotate(image, vm.degrees(params['angle']));
+  // print(rotated.width);
+  // print(bitmap.width);
+  // final topLeft = Offset(bitmap.width * cropTopLeft.dx, bitmap.height * cropTopLeft.dy);
+  // final bottomRight = Offset(bitmap.width * cropBottomRight.dx, bitmap.height * cropBottomRight.dy);
+  // final sizeCrop = bottomRight - topLeft;
+
+  // final cropped = img.copyCrop(rotated, topLeft.dx.toInt(), topLeft.dy.toInt(), sizeCrop.dx.toInt(), sizeCrop.dy.toInt());
+
+  // return Bitmap.fromHeadless(cropped.width, cropped.height, cropped.getBytes());
+
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+  
+  final completer = Completer<ui.Image>();
+  ui.decodeImageFromList(bitmap.buildHeaded(), (image)=> completer.complete(image));
+  final image = await completer.future;
+
+  final topLeft = Offset(bitmap.width * cropTopLeft.dx, bitmap.height * cropTopLeft.dy);
+  final bottomRight = Offset(bitmap.width * cropBottomRight.dx, bitmap.height * cropBottomRight.dy);
+  
+  final size = Offset(bitmap.width.toDouble(), bitmap.height.toDouble());
+  final sizeCrop = bottomRight - topLeft;
+
+  canvas.clipRect(Rect.fromPoints(topLeft, bottomRight));
+  
+  canvas.translate(size.dx * 0.5, size.dy * 0.5);
+  canvas.rotate(params['angle']);
+  canvas.translate(-size.dx * 0.5, -size.dy * 0.5);
+
+  canvas.drawImage(image, Offset.zero, Paint());
+  
+  final picture = recorder.endRecording();
+  final result = await picture.toImage(size.dx.toInt(), size.dy.toInt());
+
+  // final recorderClip = ui.PictureRecorder();
+  // final canvasClip = Canvas(recorderClip);
+
+  // canvasClip.drawImageRect(result, Rect.fromPoints(topLeft, bottomRight), Rect.fromLTWH(0, 0, sizeCrop.dx, sizeCrop.dy), Paint());
+  // final pictureClip = recorderClip.endRecording();
+  // final resultClip = await pictureClip.toImage(sizeClip.dx.toInt(), sizeClip.dy.toInt());
+  //final bytes = (await resultClip.toByteData()).buffer.asUint8List();
+  // return Bitmap.fromHeadless(resultClip.width, resultClip.height, bytes);
+  
+  final imageRes = img.Image.fromBytes(result.width, result.height, (await result.toByteData()).buffer.asUint8List());
+  final cropped = img.copyCrop(imageRes, topLeft.dx.toInt(), topLeft.dy.toInt(), sizeCrop.dx.toInt(), sizeCrop.dy.toInt());
+
+  // final bytes = (await resultClip.toByteData()).buffer.asUint8List();
+  return Bitmap.fromHeadless(cropped.width, cropped.height, cropped.getBytes());
+}
+
+Future<Uint8List> computeResult(Map<String, dynamic> params) async {
+  final bitmap = params['bitmap'] as Bitmap; 
+  
+  final result = await applyTransform(params);
+  params['bitmap'] = result;
+
+  //final bytes = applyFilters(params).buildHeaded();
+  return applyFilters(params).buildHeaded();
+}
+
 class EditorController extends GetxController { 
 
   // final originalMediumBitmap = Rx<Bitmap>();
   // final originalSmallBitmap = Rx<Bitmap>();
-  Photo _photo;
 
   Bitmap _originalMediumBitmap;
   Bitmap _originalSmallBitmap;
@@ -72,51 +146,35 @@ class EditorController extends GetxController {
   final mediumImage = Rx<Uint8List>();
   final smallImage = Rx<Uint8List>();
 
-  Bitmap _applyFilters(Bitmap bitmap) {
-    final contrastBmp = bmp.contrast(bitmap, _contrast);
-    return bmp.adjustColor(contrastBmp, exposure: _exposure, saturation: _saturation, blacks: _whiteBalance.toInt());
+  Map<String, dynamic> _filterParams(Bitmap bitmap) {
+    return {
+      'contrast': _contrast,
+      'whiteBalance': _whiteBalance,
+      'exposure': _exposure,
+      'saturation': _saturation,
+      'bitmap': bitmap
+    };
   }
 
-  Future<Bitmap> _applyTransform(Bitmap bitmap) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-   
-    final completer = Completer<ui.Image>();
-    ui.decodeImageFromList(bitmap.buildHeaded(), (image)=> completer.complete(image));
-    final image = await completer.future;
-
-    final topLeft = Offset(bitmap.width * _cropTopLeft.dx, bitmap.height * _cropTopLeft.dy);
-    final bottomRight = Offset(bitmap.width * _cropBottomRight.dx, bitmap.height * _cropBottomRight.dy);
-   
-    final size = Offset(bitmap.width.toDouble(), bitmap.height.toDouble());
-
-    canvas.clipRect(Rect.fromPoints(topLeft, bottomRight));
-    
-    canvas.translate(size.dx * 0.5, size.dy * 0.5);
-    canvas.rotate(_angle);
-    canvas.translate(-size.dx * 0.5, -size.dy * 0.5);
-
-    canvas.drawImage(image, Offset(0, 0), Paint());
-    //canvas.drawImageRect(image, Rect.fromPoints(topLeft, bottomRight), Rect.fromLTWH(0, 0, size.dx.toInt().toDouble(), size.dy.toInt().toDouble()) , Paint());
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(size.dx.toInt(), size.dy.toInt());
-    final bytes = (await result.toByteData()).buffer.asUint8List();
-    return Bitmap.fromHeadless(result.width, result.height, bytes);
+  Map<String, dynamic> _transformParams(Bitmap bitmap) {
+    return {
+      'angle': _angle,
+      'cropTopLeft': _cropTopLeft,
+      'cropBottomRight': _cropBottomRight,
+      'bitmap': bitmap
+    };
   }
 
   Future _updateFilters() async {
-    mediumImage.value = _applyFilters(_mediumBitmap).buildHeaded();
+    mediumImage.value = applyFilters(_filterParams(_mediumBitmap)).buildHeaded();
     await Future.delayed(Duration(milliseconds: 200));
     smallImage.value = null;
   }
 
   Future init(Photo photo) async {
-    _photo = photo;
-
     _contrast = photo.contrast;
     _exposure = photo.exposure;
-    _whiteBalance = photo.whiteBalance;
+    _whiteBalance = (photo.whiteBalance.toInt() << 16) + (photo.whiteBalance.toInt() << 8) + (photo.whiteBalance.toInt()).toDouble();
     _saturation = photo.saturation;
     _angle = photo.angle;
     _cropTopLeft = Offset(photo.cropLeftX, photo.cropTopY);
@@ -124,7 +182,7 @@ class EditorController extends GetxController {
 
     contrast.value = _contrast;
     exposure.value = _exposure;
-    whiteBalance.value = _whiteBalance;
+    whiteBalance.value = photo.whiteBalance;
     saturation.value = _saturation;
     angle.value = _angle;
     cropTopLeft.value = _cropTopLeft;
@@ -136,13 +194,7 @@ class EditorController extends GetxController {
     _mediumBitmap = _originalMediumBitmap.cloneHeadless();
     _smallBitmap = _originalSmallBitmap.cloneHeadless();
 
-    //_smallBitmap = await _applyTransform(_smallBitmap);
-    //_smallBitmap = _applyFilters(_smallBitmap);
-
-    //_mediumBitmap = await _applyTransform(_mediumBitmap);
-    //_mediumBitmap = _applyFilters(_mediumBitmap);
-
-    mediumImage.value = _applyFilters(_mediumBitmap).buildHeaded();
+    mediumImage.value = applyFilters(_filterParams(_mediumBitmap)).buildHeaded();
   }
 
   double closeValue(double from, double to, double value) {
@@ -162,7 +214,7 @@ class EditorController extends GetxController {
       final dv = (1.25 - 0.75) / 30;
       if ((value - _contrast).abs() > dv) {
         _contrast = value;
-        smallImage.value = _applyFilters(_smallBitmap).buildHeaded();
+        smallImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
       } 
     } else {
       _contrast = value;
@@ -176,7 +228,7 @@ class EditorController extends GetxController {
       final dv = (0.5 - -0.5) / 30;
       if ((value - _exposure).abs() > dv) {
         _exposure = value;
-        smallImage.value = _applyFilters(_smallBitmap).buildHeaded();
+        smallImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
       } 
     } else {
       _exposure = value;
@@ -190,7 +242,7 @@ class EditorController extends GetxController {
       final dv = (0.5 - -0.5) / 30;
       if ((value - _saturation).abs() > dv) {
         _saturation = value;
-        mediumImage.value = _applyFilters(_smallBitmap).buildHeaded();
+        mediumImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
       } 
     } else {
       _saturation = value;
@@ -206,7 +258,7 @@ class EditorController extends GetxController {
       final dv = (100.0) / 30;
       if ((blacks - _whiteBalance).abs() > dv) {
         _whiteBalance = blacks.toDouble();
-        smallImage.value = _applyFilters(_smallBitmap).buildHeaded();
+        smallImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
       } 
     } else {
       _whiteBalance = blacks.toDouble();
@@ -215,29 +267,31 @@ class EditorController extends GetxController {
   }
 
   Future setFilterMode(FilterMode value) async {
-    if (filterMode.value == FilterMode.correction && value != FilterMode.correction) {
-      mediumImage.value = null;
-      filterMode.value = value;
-      angle.value = 0;
+    if (filterMode.value != value) {
+      if (filterMode.value == FilterMode.correction && value != FilterMode.correction) {
+        mediumImage.value = null;
+        filterMode.value = value;
+        angle.value = 0;
 
-      _smallBitmap = await _applyTransform(_smallBitmap);
-      smallImage.value = _applyFilters(_smallBitmap).buildHeaded();
+        _smallBitmap = await applyTransform(_transformParams(_smallBitmap));
+        smallImage.value = applyFilters(_filterParams(_smallBitmap)).buildHeaded();
 
-      _mediumBitmap = await _applyTransform(_mediumBitmap);
-      mediumImage.value = _applyFilters(_mediumBitmap).buildHeaded();
-      smallImage.value = null;
-    } else if (value == FilterMode.correction) {
-      mediumImage.value = null;
-      await Future.delayed(Duration(milliseconds: 100));
-      filterMode.value = value;
-      angle.value = _angle;
+        _mediumBitmap = await applyTransform(_transformParams(_mediumBitmap));
+        mediumImage.value = applyFilters(_filterParams(_mediumBitmap)).buildHeaded();
+        smallImage.value = null;
+      } else if (value == FilterMode.correction) {
+        mediumImage.value = null;
+        await Future.delayed(Duration(milliseconds: 100));
+        filterMode.value = value;
+        angle.value = _angle;
 
-      _smallBitmap = _originalSmallBitmap.cloneHeadless();
-      _mediumBitmap = _originalMediumBitmap.cloneHeadless();
+        _smallBitmap = _originalSmallBitmap.cloneHeadless();
+        _mediumBitmap = _originalMediumBitmap.cloneHeadless();
 
-      mediumImage.value = _applyFilters(_mediumBitmap).buildHeaded();
-    } else {
-      filterMode.value = value;
+        mediumImage.value = applyFilters(_filterParams(_mediumBitmap)).buildHeaded();
+      } else {
+        filterMode.value = value;
+      }
     }
   }
 
@@ -249,17 +303,17 @@ class EditorController extends GetxController {
   }
 
   void rotate(double value) {
-    _angle = closeValue(-3.14, 3.14, value);;
+    _angle = closeValue(-3.14, 3.14, value);
     angle.value = _angle;
   }
 
   Future<Uint8List> result(String path) async {
     final bitmap = await Bitmap.fromProvider(FileImage(File(path)));
+    final Map<String, dynamic> params = {};
+    params.addAll(_filterParams(bitmap));
+    params.addAll(_transformParams(bitmap));
 
-    final result = await _applyTransform(bitmap);
-    final bytes = _applyFilters(result).buildHeaded();
-
-    return Bitmap.fromHeadful(bitmap.width, bitmap.height, bytes).buildHeaded();
+    return await computeResult(params);
   }
 
   void close() {

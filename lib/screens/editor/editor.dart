@@ -1,27 +1,20 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:garna/global/constants.dart';
 import 'package:garna/global/utilities/garna_app_icons.dart';
 import 'package:garna/global/widgets/custom_material_button.dart';
-import 'package:garna/main.dart';
 import 'package:garna/models/photo.dart';
 import 'package:garna/screens/editor/bloc/editor_bloc.dart';
 import 'package:garna/screens/editor/widgets/crop_grid_widget.dart';
 import 'package:garna/screens/editor/widgets/custom_image_slider.dart';
-import 'package:garna/screens/editor/widgets/custom_slider.dart';
 import 'package:garna/screens/editor/widgets/custom_text_button.dart';
 import 'package:garna/screens/editor/widgets/edit_button_widget.dart';
 import 'package:garna/screens/editor/widgets/editor_mode_switcher.dart';
 import 'package:garna/screens/editor/widgets/filter_button.dart';
 import 'package:garna/screens/save/save.dart';
 import 'package:get/get.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
-import 'package:image/image.dart' as imageLib;
 
 class EditorScreen extends StatefulWidget {
   final Photo photo;
@@ -114,6 +107,11 @@ class _EditorScreenState extends State<EditorScreen> {
     _editorController.rotate(value);
   }
 
+  void _onAngleChangeEnd(double value) {
+  //  _editorController.rotate(value, small: false);
+  }
+
+
   void _onSkewXChanged(double value) {
      _editorController.skewX.value = _editorController.closeValue(-1, 1, value);
   }
@@ -134,9 +132,8 @@ class _EditorScreenState extends State<EditorScreen> {
     _showLoader();
     _editorController.setCrop(_cropGridController.topLeftRatio, _cropGridController.bottomRightRatio);
     
-    final original = await _editorController.result(widget.photo.originalPath);
     final small = await _editorController.result(widget.photo.smallPath);
-    
+    final original = await _editorController.result(widget.photo.originalPath);
     Get.back();
     Get.to(
       SaveScreen(
@@ -195,21 +192,21 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildButtons() {
     final names = [
-      'Корректировка',
-      'Контраст',
       'Экспозиция',
+      'Контраст',
       'Насыщенность',
-      'Баланс белого'
+      'Баланс белого',
+      'Корректировка',
     ];
     final icons = [
-      GarnaAppIcons.cut,
-      GarnaAppIcons.contrast,
       GarnaAppIcons.exposition,
+      GarnaAppIcons.contrast,
       GarnaAppIcons.satturation,
-      GarnaAppIcons.whitebalance
+      GarnaAppIcons.whitebalance,
+      GarnaAppIcons.cut,
     ];
     return Container(
-      height: 90,
+      height: 70,
       margin: const EdgeInsets.only(top: 10),
       child: Obx(
         () {
@@ -231,7 +228,8 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildContrast() {
     return Obx(
-      ()=> Expanded(
+      ()=> Padding(
+        padding: const EdgeInsets.only(top: 30),
         child: Slider(
           value: _editorController.contrast.value,
           min: 0.75,
@@ -245,7 +243,8 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildSaturation() {
     return Obx(
-      ()=> Expanded(
+      ()=> Padding(
+        padding: const EdgeInsets.only(top: 30),
         child: Slider(
           value: _editorController.saturation.value,
           min: 0.25,
@@ -259,7 +258,8 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildExposure() {
     return Obx(
-      ()=> Expanded(
+      ()=> Padding(
+        padding: const EdgeInsets.only(top: 30),
         child: Slider(
           value: _editorController.exposure.value,
           min: -0.5,
@@ -273,7 +273,8 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildWhiteBalance() {
     return Obx(
-      ()=> Expanded(
+      ()=> Padding(
+        padding: const EdgeInsets.only(top: 30),
         child: Slider(
           value: _editorController.whiteBalance.value,
           min: 0,
@@ -301,6 +302,7 @@ class _EditorScreenState extends State<EditorScreen> {
               min: -3.14,
               max: 3.14,
               onChanged: _onAngleChanged,
+              onChangeEnd: _onAngleChangeEnd,
             )
           )
         ),
@@ -502,7 +504,7 @@ class _EditorScreenState extends State<EditorScreen> {
         final skewX = _editorController.skewX.value;
         final skewY = _editorController.skewY.value;             
         final scale = 1.0;//min(1.3, max(angle.abs() + 1, 1.0));
-        final transform = Matrix4.identity()..rotateZ(angle)..rotateY(skewX)..rotateX(skewY)..scale(vm.Vector3(scale, 1, 1));
+        final transform = Matrix4.identity()..rotateZ(angle)..rotateY(skewX)..rotateX(skewY);//..scale(vm.Vector3(scale, 1, 1));
 
         final medium = _editorController.mediumImage.value;
         final small = _editorController.smallImage.value;
@@ -560,7 +562,7 @@ class _EditorScreenState extends State<EditorScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: SizedBox.expand(
+        body: Container(
           child: Column(
             children: [
               _buildTopButtons(),
@@ -568,8 +570,9 @@ class _EditorScreenState extends State<EditorScreen> {
                 child: _buildImageLayers(),
               ),
               Container(
-                color: Colors.black,
+               // color: Colors.black,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     EditorModeSwitcherWidget(
                       buttons: [
@@ -579,31 +582,25 @@ class _EditorScreenState extends State<EditorScreen> {
                       controller: _pageController,
                     ),
                     Container(
-                      height: 260,
-                      child: PageView(
+                      height: 250,
+                      child: Container(
+                       child: PageView(
                         physics: const NeverScrollableScrollPhysics(),
                         controller: _pageController,
                         children: [
-                            Column(
-                              children: [
-                                Expanded(
-                                  child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    children: List.generate(
-                                      10,
-                                      (index) => FilterButtonWidget(
-                                        onPressed: () {},
-                                        child: Container(
-                                          color: Colors.amber.withOpacity(index / 10),
-                                        ),
-                                        title: 'Фильтр $index',
-                                      ),
-                                    ),
-                                  ),
+                          ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: List.generate(
+                              10,
+                              (index) => FilterButtonWidget(
+                                onPressed: () {},
+                                child: Container(
+                                  color: Colors.amber.withOpacity(index / 10),
                                 ),
-                                //const CustomSliderWidget(),
-                              ],
+                                title: 'Фильтр $index',
+                              ),
                             ),
+                          ),
                           Column(
                             children: [
                               _buildButtons(),
@@ -612,7 +609,8 @@ class _EditorScreenState extends State<EditorScreen> {
                           ),
                         ],
                       ),
-                    ),
+                     )
+                   )
                   ],
                 )
               ),
